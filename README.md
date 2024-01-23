@@ -52,3 +52,38 @@ while(true){
 }
 ```
 同样完全忽略了如错误处理之类的底层细节，大大简化了编程，增加了程序的可读性。
+
+## day05
+
+让我们来回顾一下我们是如何使用epoll：将一个文件描述符添加到epoll红黑树，当该文件描述符上有事件发生时，拿到它、处理事件，这样我们每次只能拿到一个文件描述符，也就是一个int类型的整型值。试想，如果一个服务器同时提供不同的服务，如HTTP、FTP等，那么就算文件描述符上发生的事件都是可读事件，不同的连接类型也将决定不同的处理逻辑，仅仅通过一个文件描述符来区分显然会很麻烦，我们更加希望拿到关于这个文件描述符更多的信息。
+
+```c++
+typedef union epoll_data {
+  void *ptr;
+  int fd;
+  uint32_t u32;
+  uint64_t u64;
+} epoll_data_t;
+
+struct epoll_event {
+  uint32_t events;	/* Epoll events */
+  epoll_data_t data;	/* User data variable */
+} __EPOLL_PACKED;
+```
+
+可以看到，epoll中的data其实是一个union类型，可以储存一个指针。而通过指针，理论上我们可以指向任何一个地址块的内容，可以是一个类的对象，这样就可以将一个文件描述符封装成一个Channel类，一个Channel类自始至终只负责一个文件描述符，对不同的服务、不同的事件类型，都可以在类中进行不同的处理，而不是仅仅拿到一个int类型的文件描述符。
+
+```c++
+class Channel{
+private:
+    Epoll *ep;
+    int fd;
+    uint32_t events;
+    uint32_t revents;
+    bool inEpoll;
+};
+```
+
+显然每个文件描述符会被分发到一个Epoll类，用一个ep指针来指向。类中还有这个Channel负责的文件描述符。另外是两个事件变量，events表示希望监听这个文件描述符的哪些事件，因为不同事件的处理方式不一样。revents表示在epoll返回该Channel时文件描述符正在发生的事件。inEpoll表示当前Channel是否已经在epoll红黑树中，为了注册Channel的时候方便区分使用EPOLL_CTL_ADD还是EPOLL_CTL_MOD。
+
+注：在今天教程的源代码中，并没有将事件处理改为使用Channel回调函数的方式，仍然使用了之前对文件描述符进行处理的方法，这是错误的，将在明天的教程中进行改写。
