@@ -27,6 +27,7 @@ Server::~Server() {
 
 }
 
+/* 处理读事件 */
 void Server::handleReadEvent(int sockfd) {
     char buf[READ_BUFFER];
     while (true) {       // 非阻塞模式，必须一次读完
@@ -49,13 +50,14 @@ void Server::handleReadEvent(int sockfd) {
     }
 }
 
+/* 处理新连接 */
 void Server::newConnection(Socket *servsock) {
     InetAddress *clntaddr = new InetAddress();
     Socket *clntsock = new Socket(servsock->accept(clntaddr));
     printf("new client fd %d! IP: %s Port: %d\n", clntsock->getFd(), inet_ntoa(clntaddr->addr.sin_addr), ntohs(clntaddr->addr.sin_port));
 
-    Channel *clntChannel = new Channel(loop, clntsock->getFd());
+    Channel *clntChannel = new Channel(loop, clntsock->getFd()); // loop 和 ep 没区别，就是一层简单的封装
     std::function<void()> cb = std::bind(&Server::handleReadEvent, this, clntsock->getFd());
     clntChannel->setCallback(cb);
-    clntChannel->enableReading();
+    clntChannel->enableReading();      // 客户端的文件描述符也挂上去了
 }

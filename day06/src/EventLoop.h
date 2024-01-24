@@ -4,7 +4,7 @@
 class Epoll;
 class Channel;
 
-class EventLoop {
+class EventLoop {       // 就是 Epoll
 private:
     Epoll *ep;
     bool quit;        // 事件循环是否停止的标志位

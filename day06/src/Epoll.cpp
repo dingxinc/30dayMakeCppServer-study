@@ -50,7 +50,7 @@ void Epoll::updateChannel(Channel* channel) {
     struct epoll_event ev;
     bzero(&ev, sizeof(ev));
     ev.data.ptr = channel;
-    ev.events = channel->getEvents();
+    ev.events = channel->getEvents();    // 这里的 getEvents() 是在 Channel 类中的 enableReading() 中设置的
     if (!channel->getInEpoll()) {
         errif(epoll_ctl(epfd, EPOLL_CTL_ADD, fd, &ev) == -1, "epoll_ctl error");
         channel->setInEpoll();        
