@@ -117,3 +117,6 @@ private:
 增加线程池，在 eventloop 类中创建线程池对象，修改 channel 类中的 handleEvent 函数，改成线程池模式。
 
 ## day11
+
+完善线程池，使用模板修改了线程池 add 函数，修改了 channel 类。修改 acceptor 类，设置不使用线程池。
+connection 类 echo 函数修改，增加 send 函数。Epoll 类修改。Server 类修改。
