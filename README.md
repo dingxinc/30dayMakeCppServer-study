@@ -103,3 +103,17 @@ private:
 仔细分析可发现，对于每一个事件，不管提供什么样的服务，首先需要做的事都是调用accept()函数接受这个TCP连接，然后将socket文件描述符添加到epoll。当这个IO口有事件发生的时候，再对此TCP连接提供相应的服务。
 
 这样一来，新建连接的逻辑就在Acceptor类中。但逻辑上新socket建立后就和之前监听的服务器socket没有任何关系了，TCP连接和Acceptor一样，拥有以上提到的三个特点，这两个类之间应该是平行关系。所以新的TCP连接应该由Server类来创建并管理生命周期，而不是Acceptor。并且将这一部分代码放在Server类里也并没有打破服务器的通用性，因为对于所有的服务，都要使用Acceptor来建立连接。(对应的是这一句话：**类中的socket fd就是服务器监听的socket fd，每一个Acceptor对应一个socket fd**)
+
+## day08
+
+增加 TCP 连接类 Connection.cpp 在 Server 类中管理监听文件描述符 listenfd 和 TCP 连接的关系，用 map 容器管理。
+
+## day09
+
+为每一个 TCP 连接分配一个读缓冲区后，就可以把客户端的信息读取到这个缓冲区内，缓冲区大小就是客户端发送的报文真实大小。主要改的是 connetcion 类和 client 客户端，增加缓冲区。Socket 类增加 connect 函数。
+
+## day10
+
+增加线程池，在 eventloop 类中创建线程池对象，修改 channel 类中的 handleEvent 函数，改成线程池模式。
+
+## day11
